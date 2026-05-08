@@ -1,0 +1,18 @@
+# Клонування / перехід в папку проекту
+cd project/
+
+# Збірка та запуск контейнерів
+docker-compose up --build -d
+
+# Перевірка запущених контейнерів
+docker ps
+
+# Перегляд логів
+docker-compose logs -f web
+
+# Зайти в контейнер і переглянути бібліотеки
+docker exec -it <container_name> bash
+pip list
+
+# Зупинити контейнери
+docker-compose down
