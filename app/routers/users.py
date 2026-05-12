@@ -1,58 +1,42 @@
-from fastapi import APIRouter, HTTPException
-from schemas.user import UserCreate, UserUpdate, UserResponse
-from db.fake_db import fake_users_db
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_db
+from app.crud import user as crud
+from app.schemas.user import UserCreate, UserUpdate, UserResponse
 from typing import List
 
-router = APIRouter(
-    prefix="/users",
-    tags=["users"]
-)
+router = APIRouter(prefix="/users", tags=["users"])
 
 
-def get_next_id() -> int:
-    return max(fake_users_db.keys(), default=0) + 1
-
-
-# GET всіх юзерів
 @router.get("/", response_model=List[UserResponse])
-def get_users():
-    return list(fake_users_db.values())
+async def get_users(db: AsyncSession = Depends(get_db)):
+    return await crud.get_users(db)
 
 
-# GET одного юзера
 @router.get("/{user_id}", response_model=UserResponse)
-def get_user(user_id: int):
-    user = fake_users_db.get(user_id)
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    user = await crud.get_user(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
-# POST створити юзера
 @router.post("/", response_model=UserResponse, status_code=201)
-def create_user(user: UserCreate):
-    new_id = get_next_id()
-    new_user = {"id": new_id, **user.model_dump()}
-    fake_users_db[new_id] = new_user
-    return new_user
+async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+    return await crud.create_user(db, user)
 
 
-# PUT оновити юзера
 @router.put("/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, user_data: UserUpdate):
-    user = fake_users_db.get(user_id)
+async def update_user(user_id: int, user_data: UserUpdate, db: AsyncSession = Depends(get_db)):
+    user = await crud.update_user(db, user_id, user_data)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    updated = user_data.model_dump(exclude_unset=True)
-    user.update(updated)
     return user
 
 
-# DELETE видалити юзера
 @router.delete("/{user_id}")
-def delete_user(user_id: int):
-    user = fake_users_db.get(user_id)
+async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    user = await crud.delete_user(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    del fake_users_db[user_id]
     return {"message": f"User {user_id} deleted successfully"}
