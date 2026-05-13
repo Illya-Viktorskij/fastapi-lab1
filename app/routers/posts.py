@@ -5,6 +5,7 @@ from app.crud import post as crud
 from app.schemas.post import PostCreate, PostResponse
 from app.utils.dependencies import get_current_user
 from app.models.models import User
+from app.metrics import TOTAL_POSTS
 from typing import List
 
 router = APIRouter(prefix="/posts", tags=["posts"])
@@ -12,7 +13,9 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 
 @router.get("/", response_model=List[PostResponse])
 async def get_posts(db: AsyncSession = Depends(get_db)):
-    return await crud.get_posts(db)
+    posts = await crud.get_posts(db)
+    TOTAL_POSTS.set(len(posts))
+    return posts
 
 
 @router.get("/my", response_model=List[PostResponse])
@@ -37,7 +40,10 @@ async def create_post(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return await crud.create_post(db, data.title, data.content, current_user.id, data.category_id)
+    post = await crud.create_post(db, data.title, data.content, current_user.id, data.category_id)
+    posts = await crud.get_posts(db)
+    TOTAL_POSTS.set(len(posts))
+    return post
 
 
 @router.delete("/{post_id}")
@@ -52,4 +58,6 @@ async def delete_post(
     if post.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your post")
     await crud.delete_post(db, post_id)
+    posts = await crud.get_posts(db)
+    TOTAL_POSTS.set(len(posts))
     return {"message": f"Post {post_id} deleted"}
