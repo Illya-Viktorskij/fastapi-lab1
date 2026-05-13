@@ -1,12 +1,13 @@
 from fastapi import FastAPI
-from app.routers import users, categories, posts, comments, profiles
+from app.routers import users, categories, posts, comments, profiles, auth
 
 app = FastAPI(
     title="Users API",
-    description="CRUD з реальною PostgreSQL БД",
-    version="1.0.0"
+    description="CRUD з JWT аутентифікацією",
+    version="2.0.0"
 )
 
+app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(categories.router)
 app.include_router(posts.router)

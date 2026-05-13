@@ -28,3 +28,7 @@ async def delete_post(db: AsyncSession, post_id: int):
     await db.delete(db_post)
     await db.commit()
     return db_post
+
+async def get_posts_by_user(db: AsyncSession, user_id: int):
+    result = await db.execute(select(Post).where(Post.user_id == user_id))
+    return result.scalars().all()

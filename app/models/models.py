@@ -10,7 +10,7 @@ class User(Base):
     name = Column(String(50), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     age = Column(Integer, nullable=False)
-
+    password_hash = Column(String(255), nullable=False, server_default="")
     # one-to-one
     profile = relationship("Profile", back_populates="user", uselist=False)
     # one-to-many
