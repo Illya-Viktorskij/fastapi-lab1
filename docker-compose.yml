@@ -10,12 +10,22 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  db_test:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: testdb
+    ports:
+      - "5433:5432"
+
   app:
     build: .
     ports:
       - "8000:8000"
     depends_on:
       - db
+      - db_test
     env_file:
       - .env
     environment:
