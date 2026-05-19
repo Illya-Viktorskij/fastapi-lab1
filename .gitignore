@@ -18,7 +18,12 @@ Thumbs.db
 
 # Logs
 *.log
-```
+
+# Environment
+.env
+*.pyc
+.pytest_cache/
+
+# Project specific
 scr_db/
 scr/
----
